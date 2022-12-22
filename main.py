@@ -72,7 +72,7 @@ class Player(pygame.sprite.Sprite):
 		if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
 			self.change_y = -16
 
-	# Передвижение игрока
+
 	def go_left(self):
 
 		self.change_x = -9
