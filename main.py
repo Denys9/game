@@ -1,232 +1,124 @@
-import pygame
+import random
 
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
 
-bg = pygame.image.load('1.jpg')
+class TicTacToe:
 
+    def __init__(self):
+        self.board = []
 
-class Player(pygame.sprite.Sprite):
-	right = True
-	def __init__(self):
-		super().__init__()
+    def create_board(self):
+        for i in range(3):
+            row = []
+            for j in range(3):
+                row.append('-')
+            self.board.append(row)
 
-		self.image = pygame.image.load('2.png')
+    def get_random_first_player(self):
+        return random.randint(0, 1)
 
+    def fix_spot(self, row, col, player):
+        self.board[row][col] = player
 
-		self.rect = self.image.get_rect()
+    def is_player_win(self, player):
+        win = None
 
-		self.change_x = 0
-		self.change_y = 0
+        n = len(self.board)
 
-	def update(self):
 
-		self.calc_grav()
+        for i in range(n):
+            win = True
+            for j in range(n):
+                if self.board[i][j] != player:
+                    win = False
+                    break
+            if win:
+                return win
 
-		self.rect.x += self.change_x
 
+        for i in range(n):
+            win = True
+            for j in range(n):
+                if self.board[j][i] != player:
+                    win = False
+                    break
+            if win:
+                return win
 
-		block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
 
-		for block in block_hit_list:
+        win = True
+        for i in range(n):
+            if self.board[i][i] != player:
+                win = False
+                break
+        if win:
+            return win
 
-			if self.change_x > 0:
-				self.rect.right = block.rect.left
-			elif self.change_x < 0:
+        win = True
+        for i in range(n):
+            if self.board[i][n - 1 - i] != player:
+                win = False
+                break
+        if win:
+            return win
+        return False
 
-				self.rect.left = block.rect.right
+        for row in self.board:
+            for item in row:
+                if item == '-':
+                    return False
+        return True
 
+    def is_board_filled(self):
+        for row in self.board:
+            for item in row:
+                if item == '-':
+                    return False
+        return True
 
-		self.rect.y += self.change_y
+    def swap_player_turn(self, player):
+        return 'X' if player == 'O' else 'O'
 
+    def show_board(self):
+        for row in self.board:
+            for item in row:
+                print(item, end=" ")
+            print()
 
-		block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		for block in block_hit_list:
+    def start(self):
+        self.create_board()
 
-			if self.change_y > 0:
-				self.rect.bottom = block.rect.top
-			elif self.change_y < 0:
-				self.rect.top = block.rect.bottom
+        player = 'X' if self.get_random_first_player() == 1 else 'O'
+        while True:
+            print(f"Player {player} turn")
 
-			self.change_y = 0
+            self.show_board()
 
-	def calc_grav(self):
 
-		if self.change_y == 0:
-			self.change_y = 1
-		else:
-			self.change_y += .95
+            row, col = list(
+                map(int, input("Enter row and column numbers to fix spot: ").split()))
+            print()
 
 
-		if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-			self.change_y = 0
-			self.rect.y = SCREEN_HEIGHT - self.rect.height
+            self.fix_spot(row - 1, col - 1, player)
 
-	def jump(self):
 
-		self.rect.y += 10
-		platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		self.rect.y -= 10
+            if self.is_player_win(player):
+                print(f"Player {player} wins the game!")
+                break
 
 
-		if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-			self.change_y = -16
+            if self.is_board_filled():
+                print("Match Draw!")
+                break
 
 
-	def go_left(self):
+            player = self.swap_player_turn(player)
 
-		self.change_x = -9
-		if(self.right):
-			self.flip()
-			self.right = False
 
-	def go_right(self):
+        print()
+        self.show_board()
 
-		self.change_x = 9
-		if (not self.right):
-			self.flip()
-			self.right = True
 
-
-	def stop(self):
-
-		self.change_x = 0
-
-	def flip(self):
-
-		self.image = pygame.transform.flip(self.image, True, False)
-
-
-class Platform(pygame.sprite.Sprite):
-	def __init__(self, width, height):
-
-		super().__init__()
-
-		self.image = pygame.image.load('3.png')
-
-
-		self.rect = self.image.get_rect()
-
-
-
-class Level(object):
-	def __init__(self, player):
-
-		self.platform_list = pygame.sprite.Group()
-
-		self.player = player
-
-
-	def update(self):
-		self.platform_list.update()
-
-	def draw(self, screen):
-
-		screen.blit(bg, (0, 0))
-
-
-		self.platform_list.draw(screen)
-
-
-class Level_01(Level):
-	def __init__(self, player):
-
-		Level.__init__(self, player)
-
-		level = [
-			[210, 32, 500, 500],
-			[210, 32, 200, 400],
-			[210, 32, 600, 300],
-		]
-
-
-		for platform in level:
-			block = Platform(platform[0], platform[1])
-			block.rect.x = platform[2]
-			block.rect.y = platform[3]
-			block.player = self.player
-			self.platform_list.add(block)
-
-
-
-def main():
-
-	pygame.init()
-
-
-	size = [SCREEN_WIDTH, SCREEN_HEIGHT]
-	screen = pygame.display.set_mode(size)
-
-
-	pygame.display.set_caption("Платформер")
-
-
-	player = Player()
-
-
-	level_list = []
-	level_list.append(Level_01(player))
-
-
-	current_level_no = 0
-	current_level = level_list[current_level_no]
-
-	active_sprite_list = pygame.sprite.Group()
-	player.level = current_level
-
-	player.rect.x = 340
-	player.rect.y = SCREEN_HEIGHT - player.rect.height
-	active_sprite_list.add(player)
-
-
-	done = False
-
-
-	clock = pygame.time.Clock()
-
-
-	while not done:
-
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				done = True
-
-
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					player.go_left()
-				if event.key == pygame.K_RIGHT:
-					player.go_right()
-				if event.key == pygame.K_UP:
-					player.jump()
-
-			if event.type == pygame.KEYUP:
-				if event.key == pygame.K_LEFT and player.change_x < 0:
-					player.stop()
-				if event.key == pygame.K_RIGHT and player.change_x > 0:
-					player.stop()
-
-
-		active_sprite_list.update()
-
-
-		current_level.update()
-
-
-		if player.rect.right > SCREEN_WIDTH:
-			player.rect.right = SCREEN_WIDTH
-
-
-		if player.rect.left < 0:
-			player.rect.left = 0
-
-
-		current_level.draw(screen)
-		active_sprite_list.draw(screen)
-
-		clock.tick(40)
-
-		pygame.display.flip()
-
-
-	pygame.quit()
+# starting the game
+tic_tac_toe = TicTacToe()
+tic_tac_toe.start()
